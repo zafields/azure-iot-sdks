@@ -564,6 +564,7 @@ namespace Microsoft.Azure.Devices.Client
             {
                 this.bodyStream.Seek(position, SeekOrigin.Begin);
                 Interlocked.Exchange(ref this.getBodyCalled, 0);
+                this.serializedAmqpMessage = null;
                 return true;
             }
             return false;
