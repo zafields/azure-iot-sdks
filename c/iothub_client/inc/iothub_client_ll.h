@@ -65,7 +65,8 @@ extern "C"
     IOTHUB_CLIENT_CONFIRMATION_OK,                   \
     IOTHUB_CLIENT_CONFIRMATION_BECAUSE_DESTROY,      \
     IOTHUB_CLIENT_CONFIRMATION_MESSAGE_TIMEOUT,      \
-    IOTHUB_CLIENT_CONFIRMATION_ERROR                 \
+    IOTHUB_CLIENT_CONFIRMATION_ERROR,                \
+    IOTHUB_CLIENT_CONFIRMATION_BATCHSTATE_FAILED     \
 
 	/** @brief Enumeration passed in by the IoT Hub when the event confirmation
 	*		   callback is invoked to indicate status of the event processing in
