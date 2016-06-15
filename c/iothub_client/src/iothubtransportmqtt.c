@@ -1085,12 +1085,14 @@ static void IoTHubTransportMqtt_DoWork(TRANSPORT_LL_HANDLE handle, IOTHUB_CLIENT
                         /* Codes_SRS_IOTHUB_MQTT_TRANSPORT_07_034: [If IoTHubTransportMqtt_DoWork has resent the message two times then it shall fail the message] */
                         if (mqttMsgEntry->retryCount >= MAX_SEND_RECOUNT_LIMIT)
                         {
+                            LogError("Message has timed %d times sending timeout to client.", mqttMsgEntry->retryCount);
                             (void)DList_RemoveEntryList(currentListEntry);
                             sendMsgComplete(mqttMsgEntry->iotHubMessageEntry, transportState, IOTHUB_CLIENT_CONFIRMATION_MESSAGE_TIMEOUT);
                             free(mqttMsgEntry);
                         }
                         else
                         {
+                            LogError("Message has timed out attempting resend %d.", mqttMsgEntry->retryCount);
                             size_t messageLength;
                             const unsigned char* messagePayload = RetrieveMessagePayload(mqttMsgEntry->iotHubMessageEntry->messageHandle, &messageLength);
                             if (messageLength == 0 || messagePayload == NULL)
