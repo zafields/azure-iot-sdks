@@ -11,10 +11,10 @@
 #include "iothubtransportmqtt.h"
 #include "azure_c_shared_utility/platform.h"
 
-//#define USE_CERT    1
+#define USE_CERT    1
 
 #ifdef USE_CERT
-#include "certs.h"
+#include "../../../certs/certs.h"
 #endif
 
 static const char* connectionString = "[device connection string]";
