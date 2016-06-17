@@ -11,6 +11,15 @@
 #include "iothubtransportmqtt.h"
 #include "azure_c_shared_utility/platform.h"
 
+#ifdef WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/tcp.h>
+#endif
 //#define USE_CERT    1
 
 #ifdef USE_CERT
@@ -18,6 +27,8 @@
 #endif
 
 static const char* connectionString = "[device connection string]";
+static const char* CONNECT_TEST_URI = "www.bing.com";
+static const char* CONNECT_TEST_PORT = "80";
 
 static int g_callbackCounter = 0;
 static bool g_reconnect = true;
@@ -99,6 +110,29 @@ IOTHUB_CLIENT_LL_HANDLE connect_to_iothub(void* user_ctx)
     return iotHubClientHandle;
 }
 
+bool is_device_connected()
+{
+    bool result;
+    struct addrinfo addrHint = { 0 };
+    struct addrinfo* addrInfo;
+    addrHint.ai_family = AF_INET;
+    addrHint.ai_socktype = SOCK_STREAM;
+    addrHint.ai_protocol = 0;
+
+    int err = getaddrinfo(CONNECT_TEST_URI, CONNECT_TEST_PORT, &addrHint, &addrInfo);
+    if (err != 0)
+    {
+        result = false;
+        printf("device is not connected\r\n");
+    }
+    else
+    {
+        freeaddrinfo(addrInfo);
+        result = true;
+    }
+    return result;
+}
+
 void iothub_client_sample_mqtt_run(void)
 {
     g_continueRunning = true;
@@ -120,14 +154,18 @@ void iothub_client_sample_mqtt_run(void)
             {
                 iterator = 0;
                 IoTHubClient_LL_Destroy(iotHubClientHandle);
-                iotHubClientHandle = connect_to_iothub(&receiveContext);
-                if (iotHubClientHandle == NULL)
+                iotHubClientHandle = NULL;
+                if (is_device_connected() )
                 {
-                    break;
-                }
-                else
-                {
-                    g_reconnect = false;
+                    iotHubClientHandle = connect_to_iothub(&receiveContext);
+                    if (iotHubClientHandle == NULL)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        g_reconnect = false;
+                    }
                 }
             }
             else
