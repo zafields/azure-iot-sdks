@@ -26,8 +26,7 @@
 #include "../../../certs/certs.h"
 #endif
 
-//static const char* connectionString = "[device connection string]";
-static const char* connectionString = "HostName=iot-sdks-test.azure-devices.net;DeviceId=jebrandoDev2;SharedAccessKey=+k1vtLdz232SHGij61BzaR1Orrwe0F3egZLcJ/EavIA=";
+static const char* connectionString = "[device connection string]";
 static const char* CONNECT_TEST_URI = "www.bing.com";
 static const char* CONNECT_TEST_PORT = "80";
 
