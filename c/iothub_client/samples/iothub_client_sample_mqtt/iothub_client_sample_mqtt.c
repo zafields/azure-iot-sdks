@@ -17,10 +17,10 @@
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/tcp.h>
+#include <netdb.h>
 #endif
-//#define USE_CERT    1
+
+#define USE_CERT    1
 
 #ifdef USE_CERT
 #include "certs.h"
@@ -35,6 +35,7 @@ static bool g_reconnect = true;
 static bool g_continueRunning = true;
 #define SEND_DATA_SIZE      1024*5
 #define MESSAGES_TIL_SEND   20000
+#define CONNECTION_RETRY    30
 
 DEFINE_ENUM_STRINGS(IOTHUB_CLIENT_CONFIRMATION_RESULT, IOTHUB_CLIENT_CONFIRMATION_RESULT_VALUES);
 
@@ -123,7 +124,9 @@ bool is_device_connected()
     if (err != 0)
     {
         result = false;
-        printf("device is not connected\r\n");
+        printf("device is not connected...\r\n");
+	// Wait for 30 seconds and try again
+        ThreadAPI_Sleep(CONNECTION_RETRY*1000);
     }
     else
     {
