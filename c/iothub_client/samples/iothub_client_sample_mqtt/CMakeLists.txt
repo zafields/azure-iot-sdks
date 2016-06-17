@@ -11,10 +11,12 @@ compileAsC99()
 
 set(iothub_client_sample_mqtt_c_files
     iothub_client_sample_mqtt.c
+    ../../../certs/certs.c
 )
 
 set(iothub_client_sample_mqtt_h_files
     iothub_client_sample_mqtt.h
+    ../../../certs/certs.h
 )
 
 IF(WIN32)
