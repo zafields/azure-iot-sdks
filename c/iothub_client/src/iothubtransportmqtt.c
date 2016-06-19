@@ -659,6 +659,8 @@ static int SendMqttConnectMsg(PMQTTTRANSPORT_HANDLE_DATA transportState)
                 }
                 else
                 {
+                    LogError("Successfully sent the mqtt_client_connect to the iothub.");
+
                     (void)tickcounter_get_current_ms(g_msgTickCounter, &transportState->mqtt_connect_time);
                     result = 0;
                 }
