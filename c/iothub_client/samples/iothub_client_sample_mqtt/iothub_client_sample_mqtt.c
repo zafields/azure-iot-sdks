@@ -20,7 +20,7 @@
 #include <netdb.h>
 #endif
 
-#define USE_CERT    1
+//#define USE_CERT    1
 
 #ifdef USE_CERT
 #include "../../../certs/certs.h"
@@ -33,11 +33,114 @@ static const char* CONNECT_TEST_PORT = "80";
 static int g_callbackCounter = 0;
 static bool g_reconnect = true;
 static bool g_continueRunning = true;
-#define SEND_DATA_SIZE      1024*5
-#define MESSAGES_TIL_SEND   20000
-#define CONNECTION_RETRY    30
+#define SEND_DATA_SIZE          1024*5
+#define MESSAGES_TIL_SEND       20000
+#define CONNECTION_RETRY        30
+#define MAX_OUTSTANDING_MSGS    5
+
+typedef struct MSG_NODE_TAG
+{
+    IOTHUB_MESSAGE_HANDLE msg_handle;
+    struct MSG_NODE_TAG* next;
+    struct MSG_NODE_TAG* prev;
+} MSG_NODE;
+
+typedef struct MESSAGE_QUEUE_TAG
+{
+    size_t count;
+    MSG_NODE* to_be_sent;
+    MSG_NODE* wait_reply;
+} MESSAGE_QUEUE;
 
 DEFINE_ENUM_STRINGS(IOTHUB_CLIENT_CONFIRMATION_RESULT, IOTHUB_CLIENT_CONFIRMATION_RESULT_VALUES);
+
+static void add_to_list(MSG_NODE* listHead, MSG_NODE* addNode)
+{
+    addNode->next = listHead->next;
+    listHead->next = addNode;
+    addNode->prev = listHead;
+}
+
+static void remove_from_list(MSG_NODE* listHead, MSG_NODE* removeNode)
+{
+    removeNode->prev->next = removeNode->next;
+    removeNode->next->prev = removeNode->prev;
+}
+
+static bool create_message_data(MESSAGE_QUEUE* msgQueue)
+{
+    bool result;
+    // Construct the message as needed
+    char msgText[128];
+    sprintf_s(msgText, sizeof(msgText), "{\"deviceId\":\"device\",\"msgCount\":%d}", g_callbackCounter++);
+
+    MSG_NODE* msgNode = malloc(sizeof(MSG_NODE));
+    if (msgNode == NULL)
+    {
+        result = false;
+    }
+    else
+    {
+        msgNode->msg_handle = IoTHubMessage_CreateFromByteArray(msgText, strlen(msgText));
+        if (msgNode->msg_handle == NULL)
+        {
+            result = false;
+        }
+        else
+        {
+            if (msgQueue->to_be_sent == NULL)
+            {
+                // The first item in the list
+                msgQueue->to_be_sent = msgNode;
+                msgQueue->to_be_sent->next = msgNode;
+                msgQueue->to_be_sent->prev = msgNode;
+            }
+            else
+            {
+                add_to_list(msgQueue->to_be_sent, msgNode);
+            }
+            msgQueue->count++;
+            result = true;
+        }
+    }
+    return result;
+}
+
+static bool send_message_data(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, MESSAGE_QUEUE* msgQueue)
+{
+    bool result;
+    MSG_NODE* itemToSend = msgQueue->to_be_sent;
+
+    if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, itemToSend->msg_handle, SendConfirmationCallback, (void*)msgQueue->to_be_sent->msg_handle) != IOTHUB_CLIENT_OK)
+    {
+        (void)printf("ERROR: IoTHubClient_LL_SendEventAsync..........FAILED!\r\n");
+        result = false;
+    }
+    else
+    {
+        remove_from_list(msgQueue->to_be_sent, itemToSend);
+        add_to_list(msgQueue->wait_reply, itemToSend);
+        (void)printf("IoTHubClient_LL_SendEventAsync accepted message for transmission to IoT Hub.\r\n");
+    }
+
+}
+
+static void destroy_message_data(MSG_NODE* destroy_item)
+{
+    IoTHubMessage_Destroy(destroy_item->msg_handle);
+    destroy_item->msg_handle = NULL;
+
+    if (destroy_item->next == destroy_item->prev)
+    {
+        free(destroy_item);
+        destroy_item = NULL;
+    }
+    else
+    {
+        destroy_item->prev->next = destroy_item->next;
+        destroy_item->next->prev = destroy_item->prev;
+    }
+}
 
 static IOTHUBMESSAGE_DISPOSITION_RESULT ReceiveMessageCallback(IOTHUB_MESSAGE_HANDLE message, void* userContextCallback)
 {
@@ -68,19 +171,15 @@ static void SendConfirmationCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, v
 {
     int msgNum = (int)userContextCallback;
     (void)printf("Confirmation[%d] received for message.  Confirm Result %s\r\n", msgNum, ENUM_TO_STRING(IOTHUB_CLIENT_CONFIRMATION_RESULT, result));
+    if (result == IOTHUB_CLIENT_CONFIRMATION_OK)
+    {
+        MSG_NODE* destroy_item = (MSG_NODE*)userContextCallback;
+        destroy_message_data(destroy_item);
+    }
     if (result == IOTHUB_CLIENT_CONFIRMATION_MESSAGE_TIMEOUT)
     {
         g_reconnect = true;
     }
-}
-
-static IOTHUB_MESSAGE_HANDLE create_message_data()
-{
-    IOTHUB_MESSAGE_HANDLE messageHandle = NULL;
-    char msgText[128];
-    sprintf_s(msgText, sizeof(msgText), "{\"deviceId\":\"device\",\"msgCount\":%d}", g_callbackCounter);
-    messageHandle = IoTHubMessage_CreateFromByteArray(msgText, strlen(msgText) );
-    return messageHandle;
 }
 
 IOTHUB_CLIENT_LL_HANDLE connect_to_iothub(void* user_ctx)
@@ -125,7 +224,7 @@ bool is_device_connected()
     {
         result = false;
         printf("device is not connected...\r\n");
-	// Wait for 30 seconds and try again
+        // Wait for 30 seconds and try again
         ThreadAPI_Sleep(CONNECTION_RETRY*1000);
     }
     else
@@ -138,6 +237,7 @@ bool is_device_connected()
 
 void iothub_client_sample_mqtt_run(void)
 {
+    MESSAGE_QUEUE msgQueue = {0};
     g_continueRunning = true;
     
     int receiveContext = 0;
@@ -149,13 +249,10 @@ void iothub_client_sample_mqtt_run(void)
     else
     {
         IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle = NULL;
-        /* Now that we are ready to receive commands, let's send some messages */
-        size_t iterator = MESSAGES_TIL_SEND+1;
         do
         {
             if (g_reconnect)
             {
-                iterator = 0;
                 IoTHubClient_LL_Destroy(iotHubClientHandle);
                 iotHubClientHandle = NULL;
                 if (is_device_connected() )
@@ -173,30 +270,22 @@ void iothub_client_sample_mqtt_run(void)
             }
             else
             {
-                if (iterator > MESSAGES_TIL_SEND)
+                /* Now that we are ready to receive commands, let's send some messages */
+                if (msgQueue.count <= MAX_OUTSTANDING_MSGS)
                 {
-                    int eventNum = g_callbackCounter;
-                    IOTHUB_MESSAGE_HANDLE msgHandle = create_message_data();
-                    if (msgHandle == NULL)
+                    if (!create_message_data(&msgQueue) )
                     {
                         (void)printf("ERROR: iotHubMessageHandle is NULL... Ending\r\n");
                         break;
                     }
                     else
                     {
-                        if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, msgHandle, SendConfirmationCallback, (void*)eventNum) != IOTHUB_CLIENT_OK)
+                        if (!send_message_data(iotHubClientHandle, &msgQueue) )
                         {
-                            (void)printf("ERROR: IoTHubClient_LL_SendEventAsync..........FAILED!\r\n");
-                        }
-                        else
-                        {
-                            g_callbackCounter++;
-                            (void)printf("IoTHubClient_LL_SendEventAsync accepted message [%d] for transmission to IoT Hub.\r\n", eventNum);
+                            (void)printf("ERROR: sending message data\r\n");
                         }
                     }
-                    iterator = 0;
                 }
-                iterator++;
             }
             IoTHubClient_LL_DoWork(iotHubClientHandle);
             ThreadAPI_Sleep(1);
