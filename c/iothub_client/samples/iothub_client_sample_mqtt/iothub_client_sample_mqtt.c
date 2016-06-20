@@ -71,6 +71,7 @@ static void SendConfirmationCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, v
     {
         dataInfo->queue->count--;
         (void)DList_RemoveEntryList(&dataInfo->entry);
+        IoTHubMessage_Destroy(dataInfo->msg_handle);
         free(dataInfo);
     }
     else
@@ -88,24 +89,30 @@ static void SendConfirmationCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, v
 static bool send_message_data(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, MESSAGE_QUEUE* msgQueue)
 {
     bool result;
-
-    PDLIST_ENTRY currentListEntry = msgQueue->to_be_sent.Flink;
-    SEND_DATA_INFO* dataInfo = containingRecord(currentListEntry, SEND_DATA_INFO, entry);
-
-    if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, dataInfo->msg_handle, SendConfirmationCallback, (void*)dataInfo) != IOTHUB_CLIENT_OK)
+    if (!DList_IsListEmpty(&msgQueue->to_be_sent) )
     {
-        (void)printf("ERROR: IoTHubClient_LL_SendEventAsync..........FAILED!\r\n");
-        result = false;
+        PDLIST_ENTRY currentListEntry = msgQueue->to_be_sent.Flink;
+        SEND_DATA_INFO* dataInfo = containingRecord(currentListEntry, SEND_DATA_INFO, entry);
+
+        if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, dataInfo->msg_handle, SendConfirmationCallback, (void*)dataInfo) != IOTHUB_CLIENT_OK)
+        {
+            (void)printf("ERROR: IoTHubClient_LL_SendEventAsync..........FAILED!\r\n");
+            result = false;
+        }
+        else
+        {
+            // Remove the current entry from the to be sent list
+            (void)DList_RemoveEntryList(currentListEntry); 
+
+            // Add to the wait for reply list
+            DList_InsertTailList(&msgQueue->wait_reply, &dataInfo->entry);
+
+            (void)printf("IoTHubClient_LL_SendEventAsync accepted message for transmission to IoT Hub.\r\n");
+            result = true;
+        }
     }
     else
     {
-        // Remove the current entry from the to be sent list
-        (void)DList_RemoveEntryList(currentListEntry); 
-
-        // Add to the wait for reply list
-        DList_InsertTailList(&msgQueue->wait_reply, &dataInfo->entry);
-
-        (void)printf("IoTHubClient_LL_SendEventAsync accepted message for transmission to IoT Hub.\r\n");
         result = true;
     }
     return result;
@@ -260,25 +267,23 @@ void iothub_client_sample_mqtt_run(void)
             else
             {
                 // Now that we are ready to receive commands, let's send some messages 
-                if (msgQueue.count < MAX_OUTSTANDING_MSGS)
+                if (send_time > MESSAGES_TIL_SEND)
                 {
-                    if (send_time > MESSAGES_TIL_SEND)
+                    if (msgQueue.count < MAX_OUTSTANDING_MSGS)
                     {
                         if (!create_message_data(&msgQueue) )
                         {
                             (void)printf("ERROR: iotHubMessageHandle is NULL... Ending\r\n");
                             break;
                         }
-                        else
-                        {
-                            if (!send_message_data(iotHubClientHandle, &msgQueue) )
-                            {
-                                (void)printf("ERROR: sending message data\r\n");
-                            }
-                            send_time = 0;
-                        }
                     }
-                    send_time++;
+                    send_time = 0;
+                }
+                send_time++;
+
+                if (!send_message_data(iotHubClientHandle, &msgQueue))
+                {
+                    (void)printf("ERROR: sending message data\r\n");
                 }
             }
             IoTHubClient_LL_DoWork(iotHubClientHandle);
@@ -289,12 +294,14 @@ void iothub_client_sample_mqtt_run(void)
         {
             PDLIST_ENTRY currentEntry = DList_RemoveHeadList(&msgQueue.to_be_sent);
             SEND_DATA_INFO* dataInfo = containingRecord(currentEntry, SEND_DATA_INFO, entry);
+            IoTHubMessage_Destroy(dataInfo->msg_handle);
             free(dataInfo);
         }
         while (!DList_IsListEmpty(&msgQueue.wait_reply))
         {
             PDLIST_ENTRY currentEntry = DList_RemoveHeadList(&msgQueue.wait_reply);
             SEND_DATA_INFO* dataInfo = containingRecord(currentEntry, SEND_DATA_INFO, entry);
+            IoTHubMessage_Destroy(dataInfo->msg_handle);
             free(dataInfo);
         }
 
