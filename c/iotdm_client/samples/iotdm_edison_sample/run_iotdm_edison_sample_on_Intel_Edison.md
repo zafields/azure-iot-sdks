@@ -67,7 +67,7 @@ You should also have the following items ready before beginning the process:
 
 3.  Configure the IoTHub connection in the source (*optional*)
 
-    The `iotdm_edison_sample` application needs a valid device connection string.
+    The `iotdm_edison_sample` application needs a valid **device connection string**.
 
     Replace the connection string between the double quotes in the code with your device's connection string:
     ```
@@ -81,25 +81,24 @@ You should also have the following items ready before beginning the process:
 4.  Now you are ready to build. Type the following commands:
 
     ```
-    $ cd ~/azure-iot-sdks/c/build_all/linux
-    $ ./build.sh --skip-unittests --no-amqp --no-mqtt
+    $ ~/azure-iot-sdks/c/build_all/linux/build.sh --skip-unittests --no-amqp --no-mqtt
     ```
 
+    > *NOTE: to rebuild an individual component, you can run make in `~/azure-iot-sdks/c/cmake/[path/to/component]` you want to rebuild. To rebuild iotdm_simple_sample after changing the connection string simply type:*
+    >
+    > ```
+    > $ make
+    > ```    
 5.  Run the sample
 
     The `iotdm_edison_sample` application needs a valid device connection string. If you have configured it in source code, then you are good to go. Otherwise you need to add it as parameter to the `iotdm_edison_sample` command line call as shown below:
 
     ```
-    $ cd ~/azure-iot-sdks/c/cmake/iotsdk_linux/iotdm_client/samples/iotdm_edison_sample/
-    $ ./iotdm_edison_sample "[device connection string]"
+    $ ~/azure-iot-sdks/c/cmake/iotsdk_linux/iotdm_client/samples/iotdm_edison_sample/iotdm_edison_sample ["<device connection string>"]
     ```
 
-    Note to rebuild an individual component, you can run make in `~/cmake/path/to/component` you want to rebuild. To rebuild iotdm_simple_sample after changing the connection string simply type:
-
-    ```
-    $ make
-    ```    
-    When the `iotdm_simple_sample` runs, the device is ready to receive and process requests from the IoT Hub service. Notice that when the device connects to IoT Hub, the service will automatically start to observe resources on the device. The device libraries will invoke the device callbacks to retrieve the latest values from the device and provide them to the service.
+#### You're all set!
+When the `iotdm_simple_sample` runs, the device is ready to receive and process requests from the IoT Hub service. Notice that when the device connects to IoT Hub, the service will automatically start to observe resources on the device. The device libraries will invoke the device callbacks to retrieve the latest values from the device and provide them to the service.
 
 
 ## Viewing results using the node.js cli tool `iothub-explorer`
@@ -107,12 +106,12 @@ You should also have the following items ready before beginning the process:
 1. Install `iothub-explorer`
 
     ```
-    sudo npm install -g iothub-explorer@dmpreview
+    $ sudo npm install -g iothub-explorer@dmpreview
     ```
 2. Test your connection with a deep read
 
     ```
-    iothub-explorer <connection-string> read <device-id> SerialNumber
+    $ iothub-explorer "<connection-string>" read <device-id> SerialNumber
     ```
     > *NOTE: A deep read will make a request of your device via Azure, thus confirming an end-to-end connection*
 
@@ -122,18 +121,20 @@ You should also have the following items ready before beginning the process:
 
 1.  Create an image using the instructions in [How to create a firmware image for Intel Edison](https://github.com/Azure/azure-iot-sdks/blob/dmpreview/c/iotdm_client/samples/iotdm_edison_sample/how_to_create_an_image_for_Intel_Edison.md).
 
-2.  Transfer your new image `edison.zip` to your Edison device. Place it in the folder `/home/root/`.
-
-3.  In the `/home/root/` folder create a file called `.cs` and add your device connection string to it.
+2.  Transfer your new image `edison.zip` to your Edison device. Place it in the `/home/root/` (a.k.a. `~`) folder.
   
     ```
-    $ echo '<connection-string>' >> /home/root/.cs
+    $ scp edison.zip root@<ip_address>:~/edison.zip
+    ```
+3.  In the `/home/root/` (a.k.a. `~`) folder create a file called `.cs` and add your device connection string to it.
+  
+    ```
+    $ echo '<device-connection-string>' >> ~/.cs
     ```
 4.  Run the `iotdm_edison_sample` application you created earlier:
 
     ```
-    $ cd ~/cmake/iotdm_client/samples/iotdm_edison_sample/
-    $ ./iotdm_edison_sample
+    $ ~/azure-iot-sdks/c/cmake/iotsdk_linux/iotdm_client/samples/iotdm_edison_sample/iotdm_edison_sample ["<device connection string>"]
     ```    
 5. Apply the new image on your Edison device using `iothub-explorer`:
 
