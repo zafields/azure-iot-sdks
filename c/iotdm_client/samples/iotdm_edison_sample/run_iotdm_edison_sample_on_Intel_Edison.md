@@ -35,7 +35,7 @@ You should also have the following items ready before beginning the process:
 2.  Clone the latest version of the azure-iot-sdks repository to your Edison
 
     ```
-    $ git clone --recursive https://github.com/Azure/azure-iot-sdks.git ~/azure-iot-sdks --branch dmpreview
+    $ git clone https://github.com/Azure/azure-iot-sdks.git ~/azure-iot-sdks --branch dmpreview
     ```
 
     Note: **git** on Edison does not support the **submodule** command. You need to process the submodules manually. To do that follow the steps below:
@@ -43,25 +43,17 @@ You should also have the following items ready before beginning the process:
     ```
     $ cd ~/azure-iot-sdks
     $ git checkout 3292dcc0081a40ca14a30912f33df1f02b444fd3
-    $ mkdir -p c/azure-c-shared-utility
     $ pushd c/azure-c-shared-utility
     $ git clone https://github.com/Azure/azure-c-shared-utility.git .
     $ git checkout 0df665aaf2b12f36fb9807ff6c1c8f35a8a676dc
     $ popd
-    $ mkdir -p c/parson
     $ pushd c/parson
     $ git clone https://github.com/kgabis/parson.git .
     $ git checkout 21c03640485c95e168dbad26bfed3f87b3804041
     $ popd
-    $ mkdir -p c/wakaama
     $ pushd c/wakaama
     $ git clone https://github.com/mhshami01/wakaama.git .
     $ git checkout 8ef361e8e72c45d87028809c9f114e1a9dd406c8
-    $ popd
-    $ mkdir -p c/wakaama/tests/utils/tinydtls
-    $ pushd c/wakaama/tests/utils/tinydtls
-    $ git clone https://git.eclipse.org/r/tinydtls/org.eclipse.tinydtls .
-    $ git checkout 0016138fe3998552eee3987a1c09da43a23c9fb5
     $ popd
     ```
 
@@ -73,22 +65,17 @@ You should also have the following items ready before beginning the process:
     ```
     $ vi ~/azure-iot-sdks/c/iotdm_client/samples/iotdm_edison_sample/iotdm_edison_sample.c
     ```
-    Edit the following line:
+    Edit line 34:
     ```
     static const char* connectionString = NULL;
     ```
 
-4.  Now you are ready to build. Type the following commands:
+4.  Now you are ready to build using the following command:
 
     ```
     $ ~/azure-iot-sdks/c/build_all/linux/build.sh --skip-unittests --no-amqp --no-mqtt
     ```
 
-    > *NOTE: to rebuild an individual component, you can run make in `~/azure-iot-sdks/c/cmake/[path/to/component]` you want to rebuild. To rebuild iotdm_simple_sample after changing the connection string simply type:*
-    >
-    > ```
-    > $ make
-    > ```    
 5.  Run the sample
 
     The `iotdm_edison_sample` application needs a valid device connection string. If you have configured it in source code, then you are good to go. Otherwise you need to add it as parameter to the `iotdm_edison_sample` command line call as shown below:
