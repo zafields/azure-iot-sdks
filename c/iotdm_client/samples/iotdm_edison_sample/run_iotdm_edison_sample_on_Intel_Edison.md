@@ -35,7 +35,7 @@ You should also have the following items ready before beginning the process:
 2.  Clone the latest version of the azure-iot-sdks repository to your Edison
 
     ```
-    $ git clone --recursive https://github.com/Azure/azure-iot-sdks.git ~ --branch dmpreview
+    $ git clone --recursive https://github.com/Azure/azure-iot-sdks.git ~/azure-iot-sdks --branch dmpreview
     ```
 
     Note: **git** on Edison does not support the **submodule** command. You need to process the submodules manually. To do that follow the steps below:
@@ -139,9 +139,9 @@ When the `iotdm_simple_sample` runs, the device is ready to receive and process 
 5. Apply the new image on your Edison device using `iothub-explorer`:
 
     ```
-    $ iothub-explorer <connection-string> firmware-update <device-id> file:////home/root/edison.zip
+    $ iothub-explorer <connection-string> firmware-update <device-id> file:///home/root/edison.zip
     ```
-    > *NOTE: The 4 forward-slashes are intentional*
+    > *NOTE: The 3 forward-slashes are intentional*
 
 
 [Setup your IoT hub]: https://github.com/Azure/azure-iot-sdks/blob/master/doc/setup_iothub.md
