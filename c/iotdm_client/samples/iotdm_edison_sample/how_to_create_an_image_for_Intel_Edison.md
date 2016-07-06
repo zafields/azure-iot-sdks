@@ -42,6 +42,7 @@ Skipping the `unzip` step, follow the remaining instructions found in `README.ed
 
 ## Configure Wifi to connect automatically
 
+#### Manual configuration
 - Edit the `wpa_supplicant.conf-sane` file:
 
     ```
@@ -53,7 +54,6 @@ Skipping the `unzip` step, follow the remaining instructions found in `README.ed
     ```
     network={
         ssid="<your wifi ssid>"
-
         key_mgmt=WPA-PSK
         pairwise=CCMP TKIP
         group=CCMP TKIP WEP104 WEP40
@@ -62,13 +62,13 @@ Skipping the `unzip` step, follow the remaining instructions found in `README.ed
     }
     ```
 
-Any deviations on the formatting of the `wpa_supplicant.conf-sane` file can cause the wifi services to fail to boot. It is recommended to obtain the wifi settings file directly from a running Edison device connected to the wifi network you want to use in your image. To do so do the following:
+#### Copy/paste the `wpa_supplicant.conf` file from an running Edison
 
-1.  On a running device the current wifi information is stored in `~/etc/wpa_supplicant/wpa_supplicant.conf`
+Any deviations on the formatting of the `wpa_supplicant.conf-sane` file can cause the wifi services to fail to boot. It is recommended to obtain the wifi settings file directly from a running Edison device connected to the wifi network you want to use in your image.
 
-2.  Create a copy of this file called `wpa_supplicant.conf-sane`
-
-3.  Then copy this file into your Ubuntu desktop machine at location `~/src/edison/edison-src/meta-intel-edison/meta-intel-edison-distro/recipes-connectivity/wpa_supplicant/wpa-supplicant/`
+```
+scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/edison/iot-devkit-yp-poky-edison-20160606/poky/meta-intel-edison/meta-intel-edison-distro/recipes-connectivity/wpa_supplicant/wpa-supplicant/wpa_supplicant.conf-sane
+```
 
 ## Adding the device management client to the image 
 
