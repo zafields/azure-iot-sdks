@@ -1,12 +1,10 @@
-# Creating an image for the Intel Edison from sources
+# Creating an image for Intel Edison from sources
 
-This document describes how to create test images for Intel Edison containing Microsoft Azure IoT Hub device management components.
+This document describes how to create test images for the Intel Edison containing Microsoft Azure IoT Hub device management components.
 
 > *Note: the images created using these instructions are designed for performing tests with Azure IoT Hub Device Management Preview. Do not use these images in production systems.*
 
-### System check for Ubuntu OS
-
-The following instructions will help you create a custom Intel Edison image using a Linux Ubuntu 14.04 desktop
+#### System check and preparation for Ubuntu 14.04
 
 ```
 sudo apt-get -y install build-essential git diffstat gawk chrpath texinfo libtool gcc-multilib libsdl1.2-dev u-boot-tools
