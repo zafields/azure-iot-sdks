@@ -1,4 +1,4 @@
-# Creating an image for Intel Edison from sources
+# Creating image for Intel Edison from sources
 
 This document describes how to create test images for the Intel Edison containing Microsoft Azure IoT Hub device management components.
 
@@ -19,13 +19,13 @@ unzip iot-devkit-yp-poky-edison-20160606.zip
 
 Any deviations on the formatting of the `wpa_supplicant.conf-sane` file can cause the wifi services to fail to boot. It is recommended to obtain the wifi settings file directly from a running Edison device connected to the wifi network you want to use in your image.
 
-#### Copy/paste the `wpa_supplicant.conf` file from a running Edison
+#### Option 1: Copy/paste the `wpa_supplicant.conf` file from a running Edison
 
 ```
 scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/edison/iot-devkit-yp-poky-edison-20160606/poky/meta-intel-edison/meta-intel-edison-distro/recipes-connectivity/wpa_supplicant/wpa-supplicant/wpa_supplicant.conf-sane
 ```
 
-#### Manual configuration
+#### Option 2: Manual configuration
 - Edit the `wpa_supplicant.conf-sane` file:
 
     ```
@@ -69,7 +69,7 @@ scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/ediso
   echo 'IMAGE_INSTALL += "iotdm-edison-sample"' >> ~/src/edison/iot-devkit-yp-poky-edison-20160606/poky/meta-intel-edison/meta-intel-edison-distro/recipes-core/images/edison-image.bb
   ```
 
-## Creating the Image
+## Creating the custom image
 
 #### Follow the steps found in README.edison
 
