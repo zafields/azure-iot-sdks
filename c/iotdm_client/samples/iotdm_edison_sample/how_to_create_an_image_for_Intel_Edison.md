@@ -93,6 +93,12 @@ scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/ediso
 
 The newly created edison.zip file contains an image for the Intel Edison that includes the iotdm_edison_sample agent. You can use this image to experiment with firmware update and factory reset scenarios.
 
+Send the new image to your Edison:
+
+```
+scp toFlash.zip root@<edison_ip_address>:~/edison.zip
+```
+
 **RESOURCES:**
 - [hackgnar: Manually Building Yocto Images for the Intel Edison Board from Source][hackgnar]
 
