@@ -6,7 +6,7 @@ This document describes how to create test images for Intel Edison containing Mi
 
 ### System check for Ubuntu OS
 
-The following instructions will help you create an Intel Edison image using a Linux Ubuntu 14.04 desktop
+The following instructions will help you create a custom Intel Edison image using a Linux Ubuntu 14.04 desktop
 
 ```
 sudo apt-get -y install build-essential git diffstat gawk chrpath texinfo libtool gcc-multilib libsdl1.2-dev u-boot-tools
@@ -17,7 +17,15 @@ unzip iot-devkit-yp-poky-edison-20160606.zip
 ```
 
 ## Modify the base image for `iotdm_edison_sample`
-### Configure Wifi to connect automatically
+### Configure Wi-Fi via `wpa_supplicant.conf`
+
+Any deviations on the formatting of the `wpa_supplicant.conf-sane` file can cause the wifi services to fail to boot. It is recommended to obtain the wifi settings file directly from a running Edison device connected to the wifi network you want to use in your image.
+
+#### Copy/paste the `wpa_supplicant.conf` file from a running Edison
+
+```
+scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/edison/iot-devkit-yp-poky-edison-20160606/poky/meta-intel-edison/meta-intel-edison-distro/recipes-connectivity/wpa_supplicant/wpa-supplicant/wpa_supplicant.conf-sane
+```
 
 #### Manual configuration
 - Edit the `wpa_supplicant.conf-sane` file:
@@ -39,14 +47,6 @@ unzip iot-devkit-yp-poky-edison-20160606.zip
     }
     ```
 
-#### Copy/paste the `wpa_supplicant.conf` file from an running Edison
-
-Any deviations on the formatting of the `wpa_supplicant.conf-sane` file can cause the wifi services to fail to boot. It is recommended to obtain the wifi settings file directly from a running Edison device connected to the wifi network you want to use in your image.
-
-```
-scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/edison/iot-devkit-yp-poky-edison-20160606/poky/meta-intel-edison/meta-intel-edison-distro/recipes-connectivity/wpa_supplicant/wpa-supplicant/wpa_supplicant.conf-sane
-```
-
 ### Adding the device management client to the image 
 
 - Clone the azure-iot-sdks branch into your home folder
@@ -55,7 +55,7 @@ scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/ediso
   git clone https://github.com/Azure/azure-iot-sdks ~/azure-iot-sdks/ --branch dmpreview --recursive
   ```
 
-  > *NOTE: - If you clone into a different folder, you will have to edit the recipe file (`azure-iot-sdks/c/iotdm_client/samples/iotdm_edison_sample/bitbake/iotdm-edison-sample.bb`) to point to your local clone*
+  > *NOTE: If you clone the repository into a different folder, you will have to edit the recipe file (`azure-iot-sdks/c/iotdm_client/samples/iotdm_edison_sample/bitbake/iotdm-edison-sample.bb`) to point to your local clone.*
 
 - Copy the recipe into your bitbake build directory:
 
