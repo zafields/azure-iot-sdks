@@ -1,4 +1,4 @@
-## How to create an image for the Intel Edison
+# Creating an image for the Intel Edison from sources
 
 This document describes how to create test images for Intel Edison containing Microsoft Azure IoT Hub device management components.
 
@@ -16,7 +16,7 @@ curl -O http://iotdk.intel.com/src/3.5/edison/iot-devkit-yp-poky-edison-20160606
 unzip iot-devkit-yp-poky-edison-20160606.zip
 ```
 
-## Modify the base image for `iotdm_edison_sample`
+## Modify the sources to include `iotdm_edison_sample`
 ### Configure Wi-Fi via `wpa_supplicant.conf`
 
 Any deviations on the formatting of the `wpa_supplicant.conf-sane` file can cause the wifi services to fail to boot. It is recommended to obtain the wifi settings file directly from a running Edison device connected to the wifi network you want to use in your image.
@@ -73,7 +73,7 @@ scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/ediso
 
 ## Creating the Image
 
-#### Follow the steps found in README.edison:
+#### Follow the steps found in README.edison
 
   ```
   cat README.edison
@@ -93,7 +93,7 @@ scp root@<edison-ip-address>:/etc/wpa_supplicant/wpa_supplicant.conf ~/src/ediso
 
 The newly created edison.zip file contains an image for the Intel Edison that includes the iotdm_edison_sample agent. You can use this image to experiment with firmware update and factory reset scenarios.
 
-Send the new image to your Edison:
+#### Send the new image to your Edison
 
 ```
 scp toFlash.zip root@<edison_ip_address>:~/edison.zip
