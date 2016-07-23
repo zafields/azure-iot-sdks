@@ -532,7 +532,7 @@ static AMQP_VALUE on_message_received(const void* context, MESSAGE_HANDLE messag
 		IOTHUB_MESSAGE_HANDLE iothub_message;
 		int api_call_result;
 
-		if ((api_call_result = IoTHubMessage_CreateFromUamqpMessage(message, &iothub_message)) != RESULT_OK)
+		if ((api_call_result = IoTHubMessage_CreateFromUamqpMessage(message, &iothub_message)) != 0 /* RESULT_OK */)
 		{
 			LogError("IoTHubTest failed creating an IOTHUB_MESSAGE_HANDLE instance for the incoming message (error=%d).", api_call_result);
 		}

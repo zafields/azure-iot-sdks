@@ -78,7 +78,7 @@ BEGIN_TEST_SUITE(iothubclient_amqp_e2etests)
 			else
 			{
 				const char* data = NULL;
-				size_t size;
+				size_t size = 0;
 				IOTHUBMESSAGE_CONTENT_TYPE content_type = IoTHubMessage_GetContentType(message);
 				
 				if (content_type == IOTHUBMESSAGE_STRING)

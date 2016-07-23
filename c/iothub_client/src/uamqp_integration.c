@@ -399,13 +399,11 @@ int IoTHubMessage_CreateFromUamqpMessage(MESSAGE_HANDLE uamqp_message, IOTHUB_ME
 		if (readPropertiesFromuAMQPMessage(iothub_message, uamqp_message) != 0)
 		{
 			LogError("Failed reading properties of the uamqp message.");
-			IoTHubMessage_Destroy(iothub_message);
-			result = __LINE__;
 		}
-		else if (readApplicationPropertiesFromuAMQPMessage(iothub_message, uamqp_message) != 0)
+
+		if (readApplicationPropertiesFromuAMQPMessage(iothub_message, uamqp_message) != 0)
 		{
 			LogError("Failed reading application properties of the uamqp message.");
-			IoTHubMessage_Destroy(iothub_message);
 			result = __LINE__;
 		}
 		else
@@ -481,6 +479,11 @@ int message_create_from_iothub_message(IOTHUB_MESSAGE_HANDLE iothub_message, MES
 			*uamqp_message = uamqp_message_tmp;
 			result = RESULT_OK;
 		}
+
+        if (result != RESULT_OK)
+        {
+            message_destroy(uamqp_message_tmp);
+        }
 	}
 
 	return result;
